@@ -1,13 +1,18 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"os"
 
 	"github.com/TeraSurror/gator/internal/config"
+	"github.com/TeraSurror/gator/internal/database"
+
+	_ "github.com/lib/pq"
 )
 
 type state struct {
+	db  *database.Queries
 	cfg *config.Config
 }
 
@@ -16,15 +21,29 @@ func main() {
 		log.Fatal("usage: cli <command> [args...]")
 	}
 
+	// Read configuration from config files
 	cfg, err := config.Read()
 	if err != nil {
 		log.Fatalf("error reading config: %v\n", err)
 	}
 	log.Printf("Read config: %+v\n", cfg)
 
-	programState := &state{cfg: &cfg}
+	// Create database connection
+	db, err := sql.Open("postgres", cfg.DbUrl)
+	if err != nil {
+		log.Fatalf("could not connect to the database: %v\n", err)
+	}
+
+	// Create program state
+	programState := &state{
+		db:  database.New(db),
+		cfg: &cfg,
+	}
+
+	// Register commands
 	cmds := commands{commandFuncMap: make(map[string]func(*state, command) error)}
 	cmds.register("login", loginHandler)
+	cmds.register("register", registerHandler)
 
 	userCmd := os.Args[1]
 	userCmdArgs := os.Args[2:]
