@@ -44,6 +44,7 @@ func main() {
 	cmds := commands{commandFuncMap: make(map[string]func(*state, command) error)}
 	cmds.register("login", loginHandler)
 	cmds.register("register", registerHandler)
+	cmds.register("reset", resetHandler)
 
 	userCmd := os.Args[1]
 	userCmdArgs := os.Args[2:]

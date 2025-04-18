@@ -16,7 +16,13 @@ func loginHandler(s *state, cmd command) error {
 	}
 	name := cmd.Args[0]
 
-	err := s.cfg.SetUser(name)
+	_, err := s.db.GetUser(context.Background(), name)
+	if err != nil {
+		log.Fatalf("error in login: %v\n", err)
+		return err
+	}
+
+	err = s.cfg.SetUser(name)
 	if err != nil {
 		return fmt.Errorf("could not set user: %w", err)
 	}
@@ -50,5 +56,21 @@ func registerHandler(s *state, cmd command) error {
 	}
 
 	log.Printf("User has been created: %+v\n", createdUser)
+	return nil
+}
+
+func resetHandler(s *state, cmd command) error {
+	if len(cmd.Args) > 1 {
+		return fmt.Errorf("usage: %s", cmd.Name)
+	}
+
+	err := s.db.DeleteUsers(context.Background())
+	if err != nil {
+		log.Printf("reset unsuccessful: %v\n", err)
+		return err
+	}
+
+	log.Printf("reset successful\n")
+
 	return nil
 }
