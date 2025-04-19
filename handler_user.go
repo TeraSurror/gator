@@ -60,7 +60,7 @@ func registerHandler(s *state, cmd command) error {
 }
 
 func resetHandler(s *state, cmd command) error {
-	if len(cmd.Args) > 1 {
+	if len(cmd.Args) > 0 {
 		return fmt.Errorf("usage: %s", cmd.Name)
 	}
 
@@ -71,6 +71,28 @@ func resetHandler(s *state, cmd command) error {
 	}
 
 	log.Printf("reset successful\n")
+
+	return nil
+}
+
+func userListHandler(s *state, cmd command) error {
+	if len(cmd.Args) > 0 {
+		return fmt.Errorf("usage: %s", cmd.Name)
+	}
+
+	userList, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		log.Printf("could not fetch user list: %v\n", err)
+		return err
+	}
+
+	for _, user := range userList {
+		if s.cfg.CurrentUserName == user.Name {
+			fmt.Printf("* %s (current)\n", user.Name)
+		} else {
+			fmt.Printf("* %s\n", user.Name)
+		}
+	}
 
 	return nil
 }
