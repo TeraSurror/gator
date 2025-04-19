@@ -46,6 +46,7 @@ func main() {
 	cmds.register("register", registerHandler)
 	cmds.register("reset", resetHandler)
 	cmds.register("users", userListHandler)
+	cmds.register("agg", aggHandler)
 
 	userCmd := os.Args[1]
 	userCmdArgs := os.Args[2:]
