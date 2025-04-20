@@ -26,7 +26,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("error reading config: %v\n", err)
 	}
-	log.Printf("Read config: %+v\n", cfg)
 
 	// Create database connection
 	db, err := sql.Open("postgres", cfg.DbUrl)
@@ -48,6 +47,7 @@ func main() {
 	cmds.register("users", userListHandler)
 	cmds.register("agg", aggHandler)
 	cmds.register("addfeed", addFeedHandler)
+	cmds.register("feeds", feedHandler)
 
 	userCmd := os.Args[1]
 	userCmdArgs := os.Args[2:]

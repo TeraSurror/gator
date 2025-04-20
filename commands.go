@@ -1,6 +1,6 @@
 package main
 
-import "errors"
+import "fmt"
 
 type command struct {
 	Name string
@@ -18,7 +18,7 @@ func (c *commands) register(name string, f func(*state, command) error) {
 func (c *commands) run(s *state, cmd command) error {
 	f, ok := c.commandFuncMap[cmd.Name]
 	if !ok {
-		return errors.New("command not supported")
+		return fmt.Errorf("command not supported: %s", cmd.Name)
 	}
 
 	return f(s, cmd)

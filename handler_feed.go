@@ -42,3 +42,16 @@ func addFeedHandler(s *state, cmd command) error {
 
 	return nil
 }
+
+func feedHandler(s *state, cmd command) error {
+	feedList, err := s.db.GetFeedList(context.Background())
+	if err != nil {
+		return fmt.Errorf("could not fetch feed: %v", err)
+	}
+
+	for _, feedRow := range feedList {
+		log.Printf("%s %s %s\n", feedRow.FeedName, feedRow.Url, feedRow.CreatorName)
+	}
+
+	return nil
+}

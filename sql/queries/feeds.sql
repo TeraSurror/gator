@@ -9,3 +9,8 @@ VALUES (
     $6
 )
 RETURNING *;
+
+-- name: GetFeedList :many
+SELECT feeds.name as feed_name, feeds.url as url, users.name as creator_name
+FROM feeds, users
+WHERE feeds.user_id = users.id;
