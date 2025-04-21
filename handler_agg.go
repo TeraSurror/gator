@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/TeraSurror/gator/internal/database"
+	"github.com/google/uuid"
 )
 
 func aggHandler(s *state, cmd command) error {
@@ -55,6 +57,22 @@ func scrapeFeed(db *database.Queries, rssFeed database.Feed) {
 	}
 
 	for _, item := range feedData.Channel.Item {
-		log.Printf("Found post: %s\n", item.Title)
+		_, err = db.CreatePost(context.Background(), database.CreatePostParams{
+			ID:          uuid.New(),
+			CreatedAt:   time.Now().UTC(),
+			UpdatedAt:   time.Now().UTC(),
+			FeedID:      rssFeed.ID,
+			Title:       item.Title,
+			Description: item.Description,
+			Url:         item.Link,
+			PublishedAt: time.Now().UTC(),
+		})
+		if err != nil {
+			if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+				continue
+			}
+			log.Printf("Couldn't create post: %v", err)
+			continue
+		}
 	}
 }
