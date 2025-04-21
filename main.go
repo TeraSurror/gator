@@ -46,8 +46,10 @@ func main() {
 	cmds.register("reset", resetHandler)
 	cmds.register("users", userListHandler)
 	cmds.register("agg", aggHandler)
-	cmds.register("addfeed", addFeedHandler)
+	cmds.register("addfeed", middlewareLoggedIn(addFeedHandler))
 	cmds.register("feeds", feedHandler)
+	cmds.register("follow", middlewareLoggedIn(followHandler))
+	cmds.register("following", followsHandler)
 
 	userCmd := os.Args[1]
 	userCmdArgs := os.Args[2:]

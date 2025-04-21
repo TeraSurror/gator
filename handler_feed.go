@@ -10,18 +10,12 @@ import (
 	"github.com/google/uuid"
 )
 
-func addFeedHandler(s *state, cmd command) error {
+func addFeedHandler(s *state, cmd command, user database.User) error {
 	if len(cmd.Args) != 2 {
 		return fmt.Errorf("usage: %s <name> <url>", cmd.Name)
 	}
 	name := cmd.Args[0]
 	url := cmd.Args[1]
-
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		log.Printf("could not fetch user info: %v", err)
-		return err
-	}
 
 	feed := database.CreateFeedParams{
 		ID:        uuid.New(),
@@ -32,10 +26,22 @@ func addFeedHandler(s *state, cmd command) error {
 		UserID:    user.ID,
 	}
 
-	_, err = s.db.CreateFeed(context.Background(), feed)
+	createdFeed, err := s.db.CreateFeed(context.Background(), feed)
 	if err != nil {
 		log.Printf("could not create feed: %v", err)
 		return err
+	}
+
+	feedFollow := database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    createdFeed.UserID,
+		FeedID:    createdFeed.ID,
+	}
+	_, err = s.db.CreateFeedFollow(context.Background(), feedFollow)
+	if err != nil {
+		return fmt.Errorf("could not created feed follow: %v", err)
 	}
 
 	log.Println("Feed created successfully!")
@@ -51,6 +57,49 @@ func feedHandler(s *state, cmd command) error {
 
 	for _, feedRow := range feedList {
 		log.Printf("%s %s %s\n", feedRow.FeedName, feedRow.Url, feedRow.CreatorName)
+	}
+
+	return nil
+}
+
+func followHandler(s *state, cmd command, user database.User) error {
+	if len(cmd.Args) != 1 {
+		return fmt.Errorf("usage: %s <url>", cmd.Name)
+	}
+
+	url := cmd.Args[0]
+
+	feed, err := s.db.GetFeedByURL(context.Background(), url)
+	if err != nil {
+		return fmt.Errorf("could not fetch feed: %v", err)
+	}
+
+	feedFollow := database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    user.ID,
+		FeedID:    feed.ID,
+	}
+	feedFollowRow, err := s.db.CreateFeedFollow(context.Background(), feedFollow)
+	if err != nil {
+		return fmt.Errorf("could perform follow action: %v", err)
+	}
+
+	log.Printf("User: %s followed feed: %s.", feedFollowRow.UserName, feedFollowRow.FeedName)
+
+	return nil
+}
+
+func followsHandler(s *state, cmd command) error {
+	feedFollows, err := s.db.GetFeedFollowsForUser(context.Background(), s.cfg.CurrentUserName)
+	if err != nil {
+		return fmt.Errorf("could not fetch follows for user: %s - %v", s.cfg.CurrentUserName, err)
+	}
+
+	log.Printf("User %s follows:\n", s.cfg.CurrentUserName)
+	for _, feedFollow := range feedFollows {
+		log.Printf("%s\n", feedFollow.FeedName)
 	}
 
 	return nil
