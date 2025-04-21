@@ -91,13 +91,13 @@ func followHandler(s *state, cmd command, user database.User) error {
 	return nil
 }
 
-func followsHandler(s *state, cmd command) error {
-	feedFollows, err := s.db.GetFeedFollowsForUser(context.Background(), s.cfg.CurrentUserName)
+func followsHandler(s *state, cmd command, user database.User) error {
+	feedFollows, err := s.db.GetFeedFollowsForUser(context.Background(), user.Name)
 	if err != nil {
-		return fmt.Errorf("could not fetch follows for user: %s - %v", s.cfg.CurrentUserName, err)
+		return fmt.Errorf("could not fetch follows for user: %s - %v", user.Name, err)
 	}
 
-	log.Printf("User %s follows:\n", s.cfg.CurrentUserName)
+	log.Printf("User %s follows:\n", user.Name)
 	for _, feedFollow := range feedFollows {
 		log.Printf("%s\n", feedFollow.FeedName)
 	}
