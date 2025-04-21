@@ -33,3 +33,11 @@ SELECT ff.id, ff.user_id, ff.feed_id, u.name as user_name, f.name as feed_name
 FROM feed_follows ff, users u, feeds f
 WHERE ff.user_id = u.id AND ff.feed_id = f.id AND u.name = $1;
 
+-- name: DeleteFeedFollow :exec
+DELETE FROM feed_follows WHERE user_id = $1 AND feed_id = $2;
+
+-- name: MarkFeedFetched :exec
+UPDATE feeds SET updated_at = NOW(), last_fetched_at = NOW() WHERE id = $1 RETURNING *;
+
+-- name: GetNextFeedToFetch :one
+SELECT * FROM feeds ORDER BY last_fetched_at ASC NULLS FIRST LIMIT 1;

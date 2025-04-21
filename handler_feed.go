@@ -64,7 +64,7 @@ func feedHandler(s *state, cmd command) error {
 
 func followHandler(s *state, cmd command, user database.User) error {
 	if len(cmd.Args) != 1 {
-		return fmt.Errorf("usage: %s <url>", cmd.Name)
+		return fmt.Errorf("usage: %s <feed url>", cmd.Name)
 	}
 
 	url := cmd.Args[0]
@@ -87,6 +87,28 @@ func followHandler(s *state, cmd command, user database.User) error {
 	}
 
 	log.Printf("User: %s followed feed: %s.", feedFollowRow.UserName, feedFollowRow.FeedName)
+
+	return nil
+}
+
+func unfollowHandler(s *state, cmd command, user database.User) error {
+	if len(cmd.Args) != 1 {
+		return fmt.Errorf("usage: %s <feed url>", cmd.Name)
+	}
+
+	url := cmd.Args[0]
+
+	feed, err := s.db.GetFeedByURL(context.Background(), url)
+	if err != nil {
+		return fmt.Errorf("could not fetch feed: %v", err)
+	}
+
+	err = s.db.DeleteFeedFollow(context.Background(), database.DeleteFeedFollowParams{UserID: user.ID, FeedID: feed.ID})
+	if err != nil {
+		return fmt.Errorf("could unfollow feed - %s: %v", feed.Url, err)
+	}
+
+	log.Printf("User: %s unfollowed feed: %s.", user.Name, feed.Url)
 
 	return nil
 }
